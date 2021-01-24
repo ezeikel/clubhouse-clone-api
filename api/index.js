@@ -41,7 +41,7 @@ const io = require("socket.io")(server, {
   cors: corsOptions,
 });
 
-const whitelist = [/localhost/, /vercel\.app/];
+const whitelist = [/localhost/, /vercel\.app/, /\.versy\.app/];
 
 // enable cors
 app.use(cors(corsOptions));
