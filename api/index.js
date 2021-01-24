@@ -30,7 +30,6 @@ const corsOptions = {
       whitelist.filter((url) => url.test && url.test(origin)).length ||
       !origin
     ) {
-      console.log(`Allowed by CORS: ${origin}`);
       callback(null, true);
     } else {
       console.error(`Not allowed by CORS: ${origin}`);
