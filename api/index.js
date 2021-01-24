@@ -21,6 +21,8 @@ if (process.env.NODE_ENV !== "staging" && process.env.NODE_ENV !== "production")
 
 const app = express();
 const server = require("http").createServer(app);
+
+const whitelist = [/localhost/, /vercel\.app/, /\.versy\.app/];
 const corsOptions = {
   origin: (origin, callback) => {
     if (
@@ -37,11 +39,10 @@ const corsOptions = {
   },
   credentials: true,
 };
+
 const io = require("socket.io")(server, {
   cors: corsOptions,
 });
-
-const whitelist = [/localhost/, /vercel\.app/, /\.versy\.app/];
 
 // enable cors
 app.use(cors(corsOptions));
