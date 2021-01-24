@@ -22,7 +22,7 @@ if (process.env.NODE_ENV !== "staging" && process.env.NODE_ENV !== "production")
 const app = express();
 const server = require("http").createServer(app);
 
-const whitelist = [/localhost/, /vercel\.app/, /\.versy\.app/];
+const whitelist = [/localhost/, /vercel\.app/, /versy\.app/];
 const corsOptions = {
   origin: (origin, callback) => {
     if (
