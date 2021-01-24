@@ -1,0 +1,15 @@
+node_modules
+temp
+npm-debug.log
+.DS_store
+._*
+.settings
+.autoservice.*
+.vscode
+/checkstyle*.xml
+/report*.html
+/xunit*.xml
+/package-lock.*
+.env
+process.defaults.js
+.now
