@@ -32,8 +32,10 @@ const peerConfig =
   process.env.NODE_ENV === "production"
     ? {
         ssl: {
-          key: fs.readFileSync("/etc/letsencrypt/keys/0000_key-certbot.pem"),
-          cert: fs.readFileSync("/etc/letsencrypt/csr/0000_csr-certbot.pem"),
+          key: fs.readFileSync(
+            "/etc/letsencrypt/live/api.versy.app/fullchain.pem"
+          ),
+          cert: fs.readFileSync("/etc/letsencrypt/live/api.versy.app/cert.pem"),
         },
         proxied: true,
       }
