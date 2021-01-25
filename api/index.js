@@ -27,11 +27,14 @@ const server = require("http").createServer(app);
 const peerConfig =
   process.env.NODE_ENV === "production"
     ? {
+        alive_timeout: 5000,
         ssl: {
           key: fs.readFileSync(
+            "/etc/letsencrypt/live/api.versy.app/privKey.pem"
+          ),
+          cert: fs.readFileSync(
             "/etc/letsencrypt/live/api.versy.app/fullchain.pem"
           ),
-          cert: fs.readFileSync("/etc/letsencrypt/live/api.versy.app/cert.pem"),
         },
       }
     : {
