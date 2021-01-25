@@ -1,3 +1,4 @@
+const fs = require("fs");
 const express = require("express");
 const { ExpressPeerServer } = require("peer");
 const cors = require("cors");
@@ -23,9 +24,20 @@ if (process.env.NODE_ENV !== "staging" && process.env.NODE_ENV !== "production")
 const app = express();
 const server = require("http").createServer(app);
 
-const peerServer = ExpressPeerServer(server, {
-  debug: true,
-});
+const peerConfig =
+  process.env.NODE_ENV === "production"
+    ? {
+        ssl: {
+          key: fs.readFileSync("/etc/letsencrypt/keys/0000_key-certbot.pem"),
+          cert: fs.readFileSync("/etc/letsencrypt/csr/0000_csr-certbot.pem"),
+        },
+        proxied: true,
+      }
+    : {
+        debug: true,
+      };
+
+const peerServer = ExpressPeerServer(server, peerConfig);
 
 app.use("/peerjs", peerServer);
 
