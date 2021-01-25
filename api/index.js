@@ -30,7 +30,7 @@ const peerConfig =
         alive_timeout: 5000,
         ssl: {
           key: fs.readFileSync(
-            "/etc/letsencrypt/live/api.versy.app/privKey.pem"
+            "/etc/letsencrypt/live/api.versy.app/privkey.pem"
           ),
           cert: fs.readFileSync(
             "/etc/letsencrypt/live/api.versy.app/fullchain.pem"
