@@ -24,6 +24,10 @@ if (process.env.NODE_ENV !== "staging" && process.env.NODE_ENV !== "production")
 const app = express();
 const server = require("http").createServer(app);
 
+console.log({
+  NODE_ENV: process.env.NODE_ENV,
+});
+
 const peerConfig =
   process.env.NODE_ENV === "production"
     ? {
