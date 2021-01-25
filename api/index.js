@@ -28,6 +28,7 @@ const peerConfig =
   process.env.NODE_ENV === "production"
     ? {
         alive_timeout: 5000,
+        proxied: true,
         ssl: {
           key: fs.readFileSync(
             "/etc/letsencrypt/live/api.versy.app/privkey.pem"
