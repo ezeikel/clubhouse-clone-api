@@ -132,8 +132,7 @@ io.on("connection", (socket) => {
       users[roomID] = room;
 
       // ?
-      console.log("USER DISCONNECTED");
-      socket.to(roomID).broadcast.emit("user-disconnected", socket.id);
+      socket.broadcast.emit("user left", socket.id);
     }
   });
 });
