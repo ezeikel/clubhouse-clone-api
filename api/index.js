@@ -1,6 +1,4 @@
-const fs = require("fs");
 const express = require("express");
-const { ExpressPeerServer } = require("peer");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const morgan = require("morgan");
@@ -23,28 +21,6 @@ if (process.env.NODE_ENV !== "staging" && process.env.NODE_ENV !== "production")
 
 const app = express();
 const server = require("http").createServer(app);
-
-const peerConfig =
-  process.env.NODE_ENV === "production"
-    ? {
-        alive_timeout: 5000,
-        proxied: true,
-        ssl: {
-          key: fs.readFileSync(
-            "/etc/letsencrypt/live/api.versy.app/privkey.pem"
-          ),
-          cert: fs.readFileSync(
-            "/etc/letsencrypt/live/api.versy.app/fullchain.pem"
-          ),
-        },
-      }
-    : {
-        debug: true,
-      };
-
-const peerServer = ExpressPeerServer(server, peerConfig);
-
-app.use("/peerjs", peerServer);
 
 const whitelist = [/localhost/, /vercel\.app/, /versy\.app/];
 const corsOptions = {
@@ -113,21 +89,55 @@ app.use((req, res) => {
   });
 });
 
+const users = {};
+const socketToRoom = {};
+
 io.on("connection", (socket) => {
-  console.log("DEBUG: connection");
-  socket.on("join-room", (roomId, userId) => {
-    console.log("DEBUG: join-room");
-    console.log({ roomId, userId });
+  socket.on("join room", (roomID) => {
+    if (users[roomID]) {
+      const length = users[roomID].length;
+      if (length === 4) {
+        socket.emit("room full");
+        return;
+      }
+      users[roomID].push(socket.id);
+    } else {
+      users[roomID] = [socket.id];
+    }
+    socketToRoom[socket.id] = roomID;
+    const usersInThisRoom = users[roomID].filter((id) => id !== socket.id);
 
-    socket.join(roomId);
-    socket.to(roomId).broadcast.emit("user-connected", userId);
+    socket.emit("all users", usersInThisRoom);
+  });
 
-    socket.on("disconnect", () => {
-      console.log("DEBUG: disconnect");
-      socket.to(roomId).broadcast.emit("user-disconnected", userId);
+  socket.on("sending signal", (payload) => {
+    io.to(payload.userToSignal).emit("user joined", {
+      signal: payload.signal,
+      callerID: payload.callerID,
     });
   });
+
+  socket.on("returning signal", (payload) => {
+    io.to(payload.callerID).emit("receiving returned signal", {
+      signal: payload.signal,
+      id: socket.id,
+    });
+  });
+
+  socket.on("disconnect", () => {
+    const roomID = socketToRoom[socket.id];
+    let room = users[roomID];
+    if (room) {
+      room = room.filter((id) => id !== socket.id);
+      users[roomID] = room;
+
+      // ?
+      console.log("USER DISCONNECTED");
+      socket.to(roomID).broadcast.emit("user-disconnected", socket.id);
+    }
+  });
 });
+
 // assign port
 app.set("port", process.env.PORT || 7000);
 
