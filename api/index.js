@@ -59,23 +59,6 @@ if (process.env.SILENCE_LOGS != "true") {
 
 app.use(cookierParser());
 
-// authenticate user via token on every request
-// app.use((req, res, next) => {
-//   const { token } = req.cookies;
-
-//   if (token) {
-//     try {
-//       const { userId } = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
-//       req.userId = userId;
-//     } catch (err) {
-//       console.log(err);
-//     }
-//   } else {
-//     console.warn("No token present.");
-//   }
-//   next();
-// });
-
 app.use("/api", require("./api"));
 app.use("/", (req, res) => {
   res.send({ response: "I am alive" }).status(200);
@@ -93,21 +76,36 @@ const users = {};
 const socketToRoom = {};
 
 io.on("connection", (socket) => {
-  socket.on("join room", (roomID) => {
-    if (users[roomID]) {
-      const length = users[roomID].length;
+  socket.on("join room", ({ roomId, muted }) => {
+    if (users[roomId]) {
+      const length = users[roomId].length;
       if (length === 4) {
         socket.emit("room full");
         return;
       }
-      users[roomID].push(socket.id);
+      users[roomId].push({
+        socketId: socket.id,
+        muted,
+      });
     } else {
-      users[roomID] = [socket.id];
+      users[roomId] = [{ socketId: socket.id, muted }];
     }
-    socketToRoom[socket.id] = roomID;
-    const usersInThisRoom = users[roomID].filter((id) => id !== socket.id);
+    socketToRoom[socket.id] = roomId;
 
-    socket.emit("all users", usersInThisRoom);
+    console.log({ socketId: socket.id, roomId });
+
+    // so we can emit events to the whole room later
+    socket.join(roomId);
+
+    // TODO: should this filter out the socket that just joined?
+    const usersInThisRoom = users[roomId].filter(
+      ({ socketId }) => socketId !== socket.id
+    );
+
+    console.log({ usersInThisRoom });
+
+    // so that the front end knows which peers to render
+    io.in(roomId).emit("all users", usersInThisRoom);
   });
 
   socket.on("sending signal", (payload) => {
@@ -124,16 +122,43 @@ io.on("connection", (socket) => {
     });
   });
 
+  socket.on("sending mutechange", (payload) => {
+    const roomId = socketToRoom[payload.peerID];
+
+    // update server copy of users
+    users[roomId] = users[roomId].map((user) => {
+      if (user.socketId === payload.peerID) {
+        return {
+          ...user,
+          muted: payload.muted,
+        };
+      }
+
+      return user;
+    });
+
+    if (roomId) {
+      socket.to(roomId).emit("returning mutechange", {
+        peerID: payload.peerID,
+        muted: payload.muted,
+      });
+    }
+  });
+
   socket.on("disconnect", () => {
-    const roomID = socketToRoom[socket.id];
-    let room = users[roomID];
+    const roomId = socketToRoom[socket.id];
+    let room = users[roomId];
     if (room) {
       room = room.filter((id) => id !== socket.id);
-      users[roomID] = room;
+      users[roomId] = room;
 
       // ?
       socket.broadcast.emit("user left", socket.id);
     }
+  });
+
+  socket.on("disconnecting", () => {
+    console.log(socket.rooms); // the Set contains at least the socket ID
   });
 });
 

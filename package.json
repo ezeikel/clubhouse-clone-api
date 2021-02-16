@@ -5,7 +5,7 @@
   "scripts": {
     "start-old": "node ./bin/www",
     "bake-env": "node ./scripts/process.env-generator.js",
-    "dev": "yarn bake-env && yarn start-dev",
+    "dev": "yarn start-dev",
     "start-dev": "nodemon --inspect=9221 api/index.js",
     "lint": "jest --config test/jest.lint.js",
     "prettier": "prettier --ignore-path .gitignore --write \"**/*.+(js|json|css|md|mdx|html)\"",
