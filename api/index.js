@@ -149,10 +149,9 @@ io.on("connection", (socket) => {
     const roomId = socketToRoom[socket.id];
     let room = users[roomId];
     if (room) {
-      room = room.filter((id) => id !== socket.id);
+      room = room.filter(({ socketId }) => socketId !== socket.id);
       users[roomId] = room;
 
-      // ?
       socket.broadcast.emit("user left", socket.id);
     }
   });
